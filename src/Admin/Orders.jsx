@@ -20,14 +20,18 @@ export default function Orders() {
       .catch((err) => console.error("Failed to fetch users:", err));
   };
 
-  const handleStatusChange = (userId, orderIndex, newStatus) => {
+  // ✅ Now this updates only a single product's status, not the entire order.
+  const handleStatusChange = (userId, orderIndex, itemIndex, newStatus) => {
     const user = usersWithOrders.find((u) => u.id === userId);
-    const updatedOrders = user.orders.map((order, i) => {
-      if (i === orderIndex) {
-        const updatedItems = order.items.map((item) => ({
-          ...item,
-          status: newStatus,
-        }));
+
+    const updatedOrders = user.orders.map((order, oIdx) => {
+      if (oIdx === orderIndex) {
+        const updatedItems = order.items.map((item, iIdx) => {
+          if (iIdx === itemIndex) {
+            return { ...item, status: newStatus };
+          }
+          return item;
+        });
         return { ...order, items: updatedItems };
       }
       return order;
@@ -38,7 +42,7 @@ export default function Orders() {
       .then(() => {
         fetchOrders();
       })
-      .catch((err) => console.error("Failed to update order status:", err));
+      .catch((err) => console.error("Failed to update item status:", err));
   };
 
   return (
@@ -65,35 +69,20 @@ export default function Orders() {
 
               {user.orders.map((order, orderIndex) => (
                 <div key={orderIndex} className="mb-6">
-                  <div className="flex justify-between items-center mb-3">
-                    <p
-                      className="text-gray-700 mb-2 text-sm"
-                      style={{ fontFamily: "SUSE Mono" }}
-                    >
-                      Ordered on:{" "}
-                      {new Date(order.date).toLocaleString("en-IN", {
-                        dateStyle: "medium",
-                        timeStyle: "short",
-                      })}
-                    </p>
+                  <p
+                    className="text-gray-700 mb-2 text-sm"
+                    style={{ fontFamily: "SUSE Mono" }}
+                  >
+                    Ordered on:{" "}
+                    {new Date(order.date).toLocaleString("en-IN", {
+                      dateStyle: "medium",
+                      timeStyle: "short",
+                    })}
+                  </p>
 
-                    <select
-                      value={order.items[0].status || "OTW"}
-                      onChange={(e) =>
-                        handleStatusChange(user.id, orderIndex, e.target.value)
-                      }
-                      className="text-sm font-medium border border-gray-300 rounded-md px-3 py-1.5 bg-white hover:border-gray-400 focus:outline-none transition"
-                      style={{ fontFamily: "SUSE Mono" }}
-                    >
-                      <option value="OTW">Pending</option>
-                      <option value="Delivered">Delivered</option>
-                      <option value="Cancelled">Cancelled</option>
-                    </select>
-                  </div>
-
-                  {order.items.map((item, index) => (
+                  {order.items.map((item, itemIndex) => (
                     <div
-                      key={index}
+                      key={itemIndex}
                       className="flex justify-between items-center py-3 border-b border-gray-200"
                       style={{ fontFamily: "SUSE Mono" }}
                     >
@@ -125,11 +114,29 @@ export default function Orders() {
                             </p>
                           )}
                           <p className="text-gray-800 font-semibold mt-1">
-                            ₹{item.price} × {item.quantity} &nbsp; | &nbsp; Status:{" "}
-                            {item.status || "Pending"}
+                            ₹{item.price} × {item.quantity}
                           </p>
                         </div>
                       </div>
+
+                      {/* ✅ Individual status control per product */}
+                      <select
+                        value={item.status || "OTW"}
+                        onChange={(e) =>
+                          handleStatusChange(
+                            user.id,
+                            orderIndex,
+                            itemIndex,
+                            e.target.value
+                          )
+                        }
+                        className="text-sm font-medium border border-gray-300 rounded-md px-3 py-1.5 bg-white hover:border-gray-400 focus:outline-none transition"
+                        style={{ fontFamily: "SUSE Mono" }}
+                      >
+                        <option value="OTW">Pending</option>
+                        <option value="Delivered">Delivered</option>
+                        <option value="Cancelled">Cancelled</option>
+                      </select>
                     </div>
                   ))}
                 </div>

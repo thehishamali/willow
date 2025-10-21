@@ -18,10 +18,9 @@ export default function Login() {
             .catch(err => console.error(err));
     }, []);
 
-    const handleLogin = async (e) => {
+    const handleLogin = (e) => {
         e.preventDefault();
 
-        // Reset errors
         setEmailError(false);
         setPasswordError(false);
         setBlockedError(false);
@@ -47,26 +46,23 @@ export default function Login() {
             return;
         }
 
-        if (existingUser.isBlock) {
+        if (existingUser.isBlock === true) {
             setBlockedError(true);
             return;
         }
 
-        // Login successful
         localStorage.setItem('user', JSON.stringify(existingUser));
         localStorage.setItem('isLoggedIn', true);
 
-        // Role-based navigation
         if (existingUser.role === 'admin') {
             navigate('/admin');
         } else {
             navigate('/');
         }
-    }
+    };
 
     return (
         <div className="min-h-screen flex flex-col items-center justify-center bg-white relative px-4 overflow-hidden">
-
             <h1
                 className="absolute top-0 left-0 text-gray-900 opacity-5 select-none pointer-events-none"
                 style={{
@@ -90,10 +86,13 @@ export default function Login() {
                         value={email}
                         placeholder="Email"
                         className="w-full px-0 py-2 text-gray-800 placeholder-gray-400 focus:outline-none border-b border-gray-400 focus:border-gray-800 transition"
-                        onChange={(e) => { setEmail(e.target.value); setEmailError(false); setBlockedError(false); }}
+                        onChange={(e) => {
+                            setEmail(e.target.value);
+                            setEmailError(false);
+                            setBlockedError(false);
+                        }}
                     />
                     {emailError && <p className='text-red-500 text-xs mt-1'>*Your email input is invalid!</p>}
-                    {blockedError && <p className='text-red-500 text-xs mt-1'>*This account is blocked!</p>}
                 </div>
 
                 <div className="relative">
@@ -102,10 +101,19 @@ export default function Login() {
                         value={password}
                         placeholder="Password"
                         className="w-full px-0 py-2 text-gray-800 placeholder-gray-400 focus:outline-none border-b border-gray-400 focus:border-gray-800 transition"
-                        onChange={(e) => { setPassword(e.target.value); setPasswordError(false); }}
+                        onChange={(e) => {
+                            setPassword(e.target.value);
+                            setPasswordError(false);
+                        }}
                     />
-                    {passwordError && <p className='text-red-500 text-xs mt-1'>*Invalid password!</p>}
+                    {passwordError && <p className='text-red-500 text-xs mt-1'>*Invalid email or password!</p>}
                 </div>
+
+                {blockedError && (
+                    <p className='text-red-600 text-sm text-center -mt-2'>
+                        *This account is blocked. Please contact the administrator.
+                    </p>
+                )}
 
                 <button
                     type="submit"
